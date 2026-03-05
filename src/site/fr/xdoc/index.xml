@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+	<properties>
+		<title>Library LiveKit</title>
+	</properties>
+	<body>
+		<section name="Library LiveKit">
+			<subsection name="Introduction">
+				<p>
+					Cette librairie int&#232;gre le serveur de visioconf&#233;rence
+					<a href="https://livekit.io/">LiveKit</a> &#224; Lutece via l'interface
+					<code>IVirtualMeetingProvider</code> d&#233;finie par le module
+					<code>module-appointment-virtualmeeting</code>.
+				</p>
+				<p>
+					Elle fournit les fonctionnalit&#233;s suivantes :
+				</p>
+				<ul>
+					<li>G&#233;n&#233;ration de jetons JWT pour les participants (publication + &#233;coute) et les spectateurs (&#233;coute seule)</li>
+					<li>Cr&#233;ation et suppression de salles via l'API LiveKit Server</li>
+					<li>Gestion des participants (liste, d&#233;tail, suppression)</li>
+					<li>Mise &#224; jour des m&#233;tadonn&#233;es d'une salle</li>
+					<li>G&#233;n&#233;ration d'URL de r&#233;union &#224; partir d'un patron d'URL configurable</li>
+				</ul>
+			</subsection>
+			<subsection name="Configuration">
+				<p>
+					Configurez la librairie dans le fichier
+					<code>WEB-INF/conf/plugins/livekit.properties</code> :
+				</p>
+				<table>
+					<tr>
+						<th>Propri&#233;t&#233;</th>
+						<th>Description</th>
+						<th>Valeur par d&#233;faut</th>
+					</tr>
+					<tr>
+						<td><code>livekit.server.apiKey</code></td>
+						<td>Cl&#233; d'API LiveKit</td>
+						<td><i>(obligatoire)</i></td>
+					</tr>
+					<tr>
+						<td><code>livekit.server.apiSecret</code></td>
+						<td>Secret d'API LiveKit</td>
+						<td><i>(obligatoire)</i></td>
+					</tr>
+					<tr>
+						<td><code>livekit.server.url</code></td>
+						<td>URL du serveur LiveKit</td>
+						<td><code>http://localhost:7880</code></td>
+					</tr>
+					<tr>
+						<td><code>livekit.server.token.ttl</code></td>
+						<td>Dur&#233;e de validit&#233; des jetons en secondes</td>
+						<td><code>21600</code> (6 heures)</td>
+					</tr>
+					<tr>
+						<td><code>livekit.server.meetingUrlPattern</code></td>
+						<td>
+							Patron d'URL de l'application front-end LiveKit.
+							Les marqueurs <code>{room}</code> et <code>{token}</code>
+							sont remplac&#233;s &#224; l'ex&#233;cution.
+						</td>
+						<td><code>https://meet.example.com/?room={room}&amp;token={token}</code></td>
+					</tr>
+				</table>
+			</subsection>
+			<subsection name="Utilisation">
+				<p>
+					Ajoutez la d&#233;pendance Maven dans le POM de votre site :
+				</p>
+				<source>
+&lt;dependency&gt;
+    &lt;groupId&gt;fr.paris.lutece.plugins&lt;/groupId&gt;
+    &lt;artifactId&gt;library-livekit&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+    &lt;type&gt;lutece-plugin&lt;/type&gt;
+&lt;/dependency&gt;
+				</source>
+				<p>
+					La librairie est automatiquement d&#233;tect&#233;e en tant que
+					<code>IVirtualMeetingProvider</code> par le module
+					<code>module-appointment-virtualmeeting</code> via la d&#233;couverte
+					de beans Spring. Aucun c&#226;blage suppl&#233;mentaire n'est n&#233;cessaire.
+				</p>
+				<p>
+					Lorsque <code>VirtualMeetingService</code> appelle
+					<code>getParticipantMeetingUrl()</code> ou <code>getViewerMeetingUrl()</code>,
+					le fournisseur LiveKit g&#233;n&#232;re un jeton JWT et l'ins&#232;re dans
+					le patron d'URL configur&#233;, retournant un lien de r&#233;union pr&#234;t &#224; l'emploi.
+				</p>
+			</subsection>
+		</section>
+	</body>
+</document>

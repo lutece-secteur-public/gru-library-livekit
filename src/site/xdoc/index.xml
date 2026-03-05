@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+	<properties>
+		<title>Library LiveKit</title>
+	</properties>
+	<body>
+		<section name="Library LiveKit">
+			<subsection name="Introduction">
+				<p>
+					This library integrates the <a href="https://livekit.io/">LiveKit</a> video-conferencing
+					server with Lutece through the <code>IVirtualMeetingProvider</code> interface
+					defined by the <code>module-appointment-virtualmeeting</code> module.
+				</p>
+				<p>
+					It provides the following features:
+				</p>
+				<ul>
+					<li>JWT token generation for participants (publish + subscribe) and viewers (subscribe only)</li>
+					<li>Room creation and deletion via the LiveKit Server API</li>
+					<li>Participant management (list, get, remove)</li>
+					<li>Room metadata update</li>
+					<li>Meeting URL generation from a configurable front-end URL pattern</li>
+				</ul>
+			</subsection>
+			<subsection name="Configuration">
+				<p>
+					Configure the library in the file
+					<code>WEB-INF/conf/plugins/livekit.properties</code>:
+				</p>
+				<table>
+					<tr>
+						<th>Property</th>
+						<th>Description</th>
+						<th>Default</th>
+					</tr>
+					<tr>
+						<td><code>livekit.server.apiKey</code></td>
+						<td>LiveKit API key</td>
+						<td><i>(required)</i></td>
+					</tr>
+					<tr>
+						<td><code>livekit.server.apiSecret</code></td>
+						<td>LiveKit API secret</td>
+						<td><i>(required)</i></td>
+					</tr>
+					<tr>
+						<td><code>livekit.server.url</code></td>
+						<td>LiveKit server URL</td>
+						<td><code>http://localhost:7880</code></td>
+					</tr>
+					<tr>
+						<td><code>livekit.server.token.ttl</code></td>
+						<td>Token time-to-live in seconds</td>
+						<td><code>21600</code> (6 hours)</td>
+					</tr>
+					<tr>
+						<td><code>livekit.server.meetingUrlPattern</code></td>
+						<td>
+							URL pattern for the LiveKit front-end application.
+							The placeholders <code>{room}</code> and <code>{token}</code>
+							are replaced at runtime.
+						</td>
+						<td><code>https://meet.example.com/?room={room}&amp;token={token}</code></td>
+					</tr>
+				</table>
+			</subsection>
+			<subsection name="Usage">
+				<p>
+					Add the Maven dependency to your site POM:
+				</p>
+				<source>
+&lt;dependency&gt;
+    &lt;groupId&gt;fr.paris.lutece.plugins&lt;/groupId&gt;
+    &lt;artifactId&gt;library-livekit&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+    &lt;type&gt;lutece-plugin&lt;/type&gt;
+&lt;/dependency&gt;
+				</source>
+				<p>
+					The library is automatically discovered as an <code>IVirtualMeetingProvider</code>
+					by the <code>module-appointment-virtualmeeting</code> module through Spring bean detection.
+					No additional wiring is required.
+				</p>
+				<p>
+					When <code>VirtualMeetingService</code> calls <code>getParticipantMeetingUrl()</code>
+					or <code>getViewerMeetingUrl()</code>, the LiveKit provider generates a JWT token
+					and embeds it into the configured URL pattern, returning a ready-to-use meeting link.
+				</p>
+			</subsection>
+		</section>
+	</body>
+</document>

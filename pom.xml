@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <parent>
+        <artifactId>lutece-global-pom</artifactId>
+        <groupId>fr.paris.lutece.tools</groupId>
+        <version>7.0.5</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>fr.paris.lutece.plugins</groupId>
+    <artifactId>library-livekit</artifactId>
+    <packaging>lutece-plugin</packaging>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>Livekit SDK integration for LUTECE</name>
+
+    <repositories>
+        <repository>
+            <id>lutece</id>
+            <name>luteceRepository</name>
+            <url>https://dev.lutece.paris.fr/maven_repository</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+            <id>luteceSnapshot</id>
+            <name>luteceSnapshot</name>
+            <url>https://dev.lutece.paris.fr/snapshot_repository</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>fr.paris.lutece</groupId>
+            <artifactId>lutece-core</artifactId>
+            <version>[7.0.0,7.9.9)</version>
+            <type>lutece-core</type>
+        </dependency>
+        <dependency>
+            <groupId>io.livekit</groupId>
+            <artifactId>livekit-server</artifactId>
+            <version>0.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>fr.paris.lutece.plugins</groupId>
+            <artifactId>module-appointment-virtualmeeting</artifactId>
+            <version>[1.0.0-SNAPSHOT,)</version>
+            <type>lutece-plugin</type>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <componentName>library-livekit</componentName>
+        <jiraProjectName>LIVEKIT</jiraProjectName>
+        <jiraComponentId></jiraComponentId>
+    </properties>
+</project>

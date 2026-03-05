@@ -1,0 +1,5 @@
+/target/
+webapp/WEB-INF/conf/db.properties
+*.prefs
+.classpath
+.project
