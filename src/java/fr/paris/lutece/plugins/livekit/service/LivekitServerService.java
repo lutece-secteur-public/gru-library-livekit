@@ -3,8 +3,11 @@ package fr.paris.lutece.plugins.livekit.service;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import fr.paris.lutece.plugins.appointment.modules.virtualmeeting.exception.VirtualMeetingException;
 import fr.paris.lutece.plugins.appointment.modules.virtualmeeting.provider.IVirtualMeetingProvider;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -43,6 +46,13 @@ public class LivekitServerService implements IVirtualMeetingProvider
     private String _strName;
     private boolean _bDefault;
 
+    // Configurable fields — when set, they take priority over AppPropertiesService
+    private String _strApiKey;
+    private String _strApiSecret;
+    private String _strServerUrl;
+    private Long _lTokenTtl;
+    private String _strMeetingUrlPattern;
+
     // IVirtualMeetingProvider — identity
 
     @Override
@@ -67,15 +77,43 @@ public class LivekitServerService implements IVirtualMeetingProvider
         _bDefault = bDefault;
     }
 
+    // Configuration setters
+
+    public void setApiKey( String strApiKey )
+    {
+        _strApiKey = strApiKey;
+    }
+
+    public void setApiSecret( String strApiSecret )
+    {
+        _strApiSecret = strApiSecret;
+    }
+
+    public void setServerUrl( String strServerUrl )
+    {
+        _strServerUrl = strServerUrl;
+    }
+
+    public void setTokenTtl( long lTokenTtl )
+    {
+        _lTokenTtl = lTokenTtl;
+    }
+
+    public void setMeetingUrlPattern( String strMeetingUrlPattern )
+    {
+        _strMeetingUrlPattern = strMeetingUrlPattern;
+    }
+
     // IVirtualMeetingProvider — meeting URL generation
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getParticipantMeetingUrl( String strRoomName, String strIdentity, String strName, Date notBefore )
+    public String getParticipantMeetingUrl( Map<String, Object> mapParameters ) throws VirtualMeetingException
     {
-        String strToken = generateParticipantToken( strRoomName, strIdentity, strName, notBefore );
+        String strToken = generateParticipantToken( mapParameters );
+        String strRoomName = (String) mapParameters.get( PARAM_ROOM_NAME );
         return buildMeetingUrl( strRoomName, strToken );
     }
 
@@ -83,16 +121,16 @@ public class LivekitServerService implements IVirtualMeetingProvider
      * {@inheritDoc}
      */
     @Override
-    public String getViewerMeetingUrl( String strRoomName, String strIdentity, String strName, Date notBefore )
+    public String getViewerMeetingUrl( Map<String, Object> mapParameters ) throws VirtualMeetingException
     {
-        String strToken = generateViewerToken( strRoomName, strIdentity, strName, notBefore );
+        String strToken = generateViewerToken( mapParameters );
+        String strRoomName = (String) mapParameters.get( PARAM_ROOM_NAME );
         return buildMeetingUrl( strRoomName, strToken );
     }
 
     private String buildMeetingUrl( String strRoomName, String strToken )
     {
-        String strPattern = AppPropertiesService.getProperty( PROPERTY_MEETING_URL_PATTERN, DEFAULT_MEETING_URL_PATTERN );
-        return strPattern.replace( PLACEHOLDER_ROOM, strRoomName ).replace( PLACEHOLDER_TOKEN, strToken );
+        return getMeetingUrlPattern( ).replace( PLACEHOLDER_ROOM, strRoomName ).replace( PLACEHOLDER_TOKEN, strToken );
     }
 
     // Token generation
@@ -110,15 +148,33 @@ public class LivekitServerService implements IVirtualMeetingProvider
      */
     public String generateParticipantToken( String strRoomName, String strIdentity, String strName )
     {
-        return generateParticipantToken( strRoomName, strIdentity, strName, null );
+        Map<String, Object> mapParameters = new HashMap<>( );
+        mapParameters.put( PARAM_ROOM_NAME, strRoomName );
+        mapParameters.put( PARAM_IDENTITY, strIdentity );
+        mapParameters.put( PARAM_DISPLAY_NAME, strName );
+
+        try
+        {
+            return generateParticipantToken( mapParameters );
+        }
+        catch( VirtualMeetingException e )
+        {
+            AppLogService.error( "LiveKit generateParticipantToken error", e );
+            return null;
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String generateParticipantToken( String strRoomName, String strIdentity, String strName, Date notBefore )
+    public String generateParticipantToken( Map<String, Object> mapParameters ) throws VirtualMeetingException
     {
+        String strRoomName = (String) mapParameters.get( PARAM_ROOM_NAME );
+        String strIdentity = (String) mapParameters.get( PARAM_IDENTITY );
+        String strName = (String) mapParameters.get( PARAM_DISPLAY_NAME );
+        Date notBefore = (Date) mapParameters.get( PARAM_NOT_BEFORE );
+
         AccessToken token = createBaseToken( );
 
         token.setIdentity( strIdentity );
@@ -184,8 +240,13 @@ public class LivekitServerService implements IVirtualMeetingProvider
      * {@inheritDoc}
      */
     @Override
-    public String generateViewerToken( String strRoomName, String strIdentity, String strName, Date notBefore )
+    public String generateViewerToken( Map<String, Object> mapParameters ) throws VirtualMeetingException
     {
+        String strRoomName = (String) mapParameters.get( PARAM_ROOM_NAME );
+        String strIdentity = (String) mapParameters.get( PARAM_IDENTITY );
+        String strName = (String) mapParameters.get( PARAM_DISPLAY_NAME );
+        Date notBefore = (Date) mapParameters.get( PARAM_NOT_BEFORE );
+
         return generateListenerToken( strRoomName, strIdentity, strName, notBefore );
     }
 
@@ -234,7 +295,7 @@ public class LivekitServerService implements IVirtualMeetingProvider
     // Room management
 
     /**
-     * Create a new room on the LiveKit server.
+     * Create a new room on the LiveKit server with default settings.
      *
      * @param strRoomName
      *            the room name
@@ -242,15 +303,30 @@ public class LivekitServerService implements IVirtualMeetingProvider
      */
     public boolean createRoom( String strRoomName )
     {
-        return createRoom( strRoomName, 0, 0 );
+        Map<String, Object> mapParameters = new HashMap<>( );
+        mapParameters.put( PARAM_ROOM_NAME, strRoomName );
+
+        try
+        {
+            return createRoom( mapParameters );
+        }
+        catch( VirtualMeetingException e )
+        {
+            AppLogService.error( "LiveKit createRoom error", e );
+            return false;
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean createRoom( String strRoomName, int nEmptyTimeout, int nMaxParticipants )
+    public boolean createRoom( Map<String, Object> mapParameters ) throws VirtualMeetingException
     {
+        String strRoomName = (String) mapParameters.get( PARAM_ROOM_NAME );
+        Integer nEmptyTimeout = (Integer) mapParameters.getOrDefault( PARAM_EMPTY_TIMEOUT, 0 );
+        Integer nMaxParticipants = (Integer) mapParameters.getOrDefault( PARAM_MAX_PARTICIPANTS, 0 );
+
         try
         {
             RoomServiceClient client = getRoomServiceClient( );
@@ -304,8 +380,10 @@ public class LivekitServerService implements IVirtualMeetingProvider
      * {@inheritDoc}
      */
     @Override
-    public boolean deleteRoom( String strRoomName )
+    public boolean deleteRoom( Map<String, Object> mapParameters ) throws VirtualMeetingException
     {
+        String strRoomName = (String) mapParameters.get( PARAM_ROOM_NAME );
+
         try
         {
             RoomServiceClient client = getRoomServiceClient( );
@@ -450,19 +528,40 @@ public class LivekitServerService implements IVirtualMeetingProvider
         return null;
     }
 
-    // Internal helpers
+    // Internal helpers — field value takes priority, AppPropertiesService is the fallback
+
+    private String getApiKey( )
+    {
+        return _strApiKey != null ? _strApiKey : AppPropertiesService.getProperty( PROPERTY_API_KEY );
+    }
+
+    private String getApiSecret( )
+    {
+        return _strApiSecret != null ? _strApiSecret : AppPropertiesService.getProperty( PROPERTY_API_SECRET );
+    }
+
+    private String getServerUrl( )
+    {
+        return _strServerUrl != null ? _strServerUrl : AppPropertiesService.getProperty( PROPERTY_SERVER_URL, DEFAULT_SERVER_URL );
+    }
+
+    private long getTokenTtl( )
+    {
+        return _lTokenTtl != null ? _lTokenTtl : AppPropertiesService.getPropertyLong( PROPERTY_TOKEN_TTL, DEFAULT_TOKEN_TTL );
+    }
+
+    private String getMeetingUrlPattern( )
+    {
+        return _strMeetingUrlPattern != null ? _strMeetingUrlPattern : AppPropertiesService.getProperty( PROPERTY_MEETING_URL_PATTERN, DEFAULT_MEETING_URL_PATTERN );
+    }
 
     /**
      * Create a base AccessToken configured with API credentials and TTL.
      */
     private AccessToken createBaseToken( )
     {
-        String strApiKey = AppPropertiesService.getProperty( PROPERTY_API_KEY );
-        String strApiSecret = AppPropertiesService.getProperty( PROPERTY_API_SECRET );
-        long lTtl = AppPropertiesService.getPropertyLong( PROPERTY_TOKEN_TTL, DEFAULT_TOKEN_TTL );
-
-        AccessToken token = new AccessToken( strApiKey, strApiSecret );
-        token.setTtl( lTtl );
+        AccessToken token = new AccessToken( getApiKey( ), getApiSecret( ) );
+        token.setTtl( getTokenTtl( ) );
 
         return token;
     }
@@ -472,10 +571,6 @@ public class LivekitServerService implements IVirtualMeetingProvider
      */
     private RoomServiceClient getRoomServiceClient( )
     {
-        String strServerUrl = AppPropertiesService.getProperty( PROPERTY_SERVER_URL, DEFAULT_SERVER_URL );
-        String strApiKey = AppPropertiesService.getProperty( PROPERTY_API_KEY );
-        String strApiSecret = AppPropertiesService.getProperty( PROPERTY_API_SECRET );
-
-        return RoomServiceClient.createClient( strServerUrl, strApiKey, strApiSecret );
+        return RoomServiceClient.createClient( getServerUrl( ), getApiKey( ), getApiSecret( ) );
     }
 }
