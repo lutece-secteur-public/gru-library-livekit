@@ -48,6 +48,13 @@
         </dependency>
     </dependencies>
 
+    <scm>
+        <connection>scm:git:https://github.com/lutece-secteur-public/gru-library-livekit.git</connection>
+        <developerConnection>scm:git:https://github.com/lutece-secteur-public/gru-library-livekit.git</developerConnection>
+        <url>https://github.com/lutece-secteur-public/gru-library-livekit.git</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
         <componentName>library-livekit</componentName>
         <jiraProjectName>LIVEKIT</jiraProjectName>
