@@ -38,7 +38,7 @@
         <dependency>
             <groupId>io.livekit</groupId>
             <artifactId>livekit-server</artifactId>
-            <version>0.12.0</version>
+            <version>0.10.1</version>
         </dependency>
         <dependency>
             <groupId>fr.paris.lutece.plugins</groupId>
